@@ -160,7 +160,7 @@ def main():
     def on_draw():
         w.clear()
         d.draw()
-        gl.glReadPixels(0, 0, d.width, d.height, gl.GL_RGB, gl.GL_UNSIGNED_INT, a)
+        gl.glReadPixels(d.width*2, 0, d.width, d.height, gl.GL_RGB, gl.GL_UNSIGNED_INT, a)
         w.set_caption(str(fps.get_fps()))
         fps.tick()
     pyglet.clock.schedule(lambda x:d.mutate(3))
