@@ -135,6 +135,10 @@ class Drawing:
     
     def draw(self):
         self.batch.draw()
+    def refresh_batch(self):
+        for i in xrange(0, len(self.triangles)):
+            self.update_index(i)
+        
     def generate(self, number_triangles):
         vertices = []
         colors = []
