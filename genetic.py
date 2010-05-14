@@ -21,7 +21,13 @@ class Triangle:
         self.points = []
         self.color = [0,0,0,255]
         self.has_changed = False
-        
+    
+    def clone(self):
+        t = Triangle()
+        t.points = self.points[0:]
+        t.color = self.color[0:]
+        t.has_changed = self.has_changed 
+        return t
 
     def serialize_points(self):
         result = []
@@ -91,6 +97,20 @@ class Drawing:
 
         
          
+    def clone(self):
+        d = Drawing(self.width, self.height, Batch())
+        bufferlength = len(self.triangles)
+        d.vertex_list = d.batch.add(
+            bufferlength*3, gl.GL_TRIANGLES, XTranslationGroup(self.width * 2, 1),
+            ("v2i/stream", [0]*bufferlength*6),
+            ("c4B/stream", [0]*bufferlength*12)
+        )
+
+
+        d.triangles = [t.clone() for t in self.triangles]
+        assert len(d.triangles) == len(self.triangles)
+        d.refresh_batch()
+        return d
     def mutate(self, num_mutations):
         triangles = self.triangles
         for i in xrange(0, num_mutations):
