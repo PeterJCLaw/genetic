@@ -134,12 +134,7 @@ class Drawing:
         self.vertex_list.colors[i*12:i*12+12] = self.triangles[i].serialize_color()*3               
     
     def draw(self):
-        vertices = []
-        color = []
-        vertex_list = self.vertex_list
-         
         self.batch.draw()
-
     def generate(self, number_triangles):
         vertices = []
         colors = []
