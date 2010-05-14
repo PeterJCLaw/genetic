@@ -158,7 +158,7 @@ def main():
     a = (gl.GLuint * (3*d.width*d.height))(0)
     @w.event
     def on_draw():
-        w.clear()
+        #w.clear()
         d.draw()
         gl.glReadPixels(d.width*2, 0, d.width, d.height, gl.GL_RGB, gl.GL_UNSIGNED_INT, a)
         w.set_caption(str(fps.get_fps()))
