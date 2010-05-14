@@ -1,6 +1,6 @@
 from random import randint, seed
 from pyglet import gl
-from pyglet.graphics import OrderedGroup, Batch
+from pyglet.graphics import OrderedGroup, Batch, Group
 from pyglet import window
 from time import sleep
 
@@ -63,13 +63,32 @@ class Triangle:
             self.points[choice] = (x,y)
         self.has_changed = True
 
+
+class XTranslationGroup(Group):
+    
+    def __init__(self, x_translation, order):
+        super(XTranslationGroup, self).__init__(parent=OrderedGroup(order))
+        self._x_translation = x_translation
+
+    def set_state(self):
+        gl.glPushMatrix()
+        gl.glTranslatef(self._x_translation,0,0)
+        gl.glPushMatrix()
+    def unset_state(self):
+        gl.glPopMatrix()
+        gl.glPopMatrix() 
 class Drawing:
     def __init__(self, width, height, batch):
         self.width = width
         self.height = height
         self.triangles = []
         self.batch = batch
-        self.batch.add(4,gl.GL_QUADS,OrderedGroup(0),("v2i/static", (0,0,0,height,width,height,0,height)), ("c3B/static",[0,0,0]*4))
+        self.batch.add( 6, 
+                        gl.GL_TRIANGLES,XTranslationGroup(2 * width, 0),
+                        ("v2i/static", (0,0,0,height,width,height,width,height,width,0,0,0)),
+                        ("c3B/static",[255,255,255]*6)
+                      )
+
         
          
     def mutate(self, num_mutations):
@@ -79,19 +98,20 @@ class Drawing:
             if e == 0:
                 choice = randint(0, len(triangles)-1)
                 triangles[choice].recolor_self_delta(5)
-                self.vertex_list.vertices[choice*6:(choice*6)+6] = triangles[choice].serialize_points()
-                self.vertex_list.colors[choice*12:choice*12+12] = triangles[choice].serialize_color()*3
-            else:
+                self.update_index(choice)
+            elif e == 1:
                 choice = randint(0, len(triangles)-1)
                 triangles[choice].reshape_delta(self.width, self.height, 25)
-                self.vertex_list.vertices[choice*6:(choice*6)+6] = triangles[choice].serialize_points()
-                self.vertex_list.colors[choice*12:choice*12+12] = triangles[choice].serialize_color()*3
+                self.update_index(choice)
             elif e == 2:
                 c1 = randint(0, len(triangles)-1)
                 c2 = clamp(c1 + randint(-5,5), 0, len(triangles)-1)
                 triangles[c1],triangles[c2] = triangles[c2],triangles[c1]
-                
-               
+                self.update_index(c1)
+                self.update_index(c2)
+    def update_index(self, i):
+        self.vertex_list.vertices[i*6:(i*6)+6] = self.triangles[i].serialize_points()
+        self.vertex_list.colors[i*12:i*12+12] = self.triangles[i].serialize_color()*3               
     
     def draw(self):
         vertices = []
@@ -113,7 +133,7 @@ class Drawing:
             colors.extend(t.serialize_color()*3)
         print len(colors), len(self.triangles)*3*4
         self.vertex_list = self.batch.add(
-            number_triangles*3, gl.GL_TRIANGLES, OrderedGroup(1), 
+            number_triangles*3, gl.GL_TRIANGLES, XTranslationGroup(self.width * 2, 1), 
             ("v2i/stream", vertices),
             ("c4B/stream", colors)
         )
@@ -129,20 +149,20 @@ def main():
     b = Batch()
     d = Drawing(width,height, b)
     d.generate(100)
-    w = window.Window(width,height,"cows", vsync = False)
+    w = window.Window(width*3,height,"cows", vsync = False)
     w.set_visible(True)
     gl.glEnable(gl.GL_BLEND)
     gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
         
-    fps = pyglet.clock.ClockDisplay()
+    fps = pyglet.clock.Clock()
+    a = (gl.GLuint * (3*d.width*d.height))(0)
     @w.event
     def on_draw():
         w.clear()
         d.draw()
-        fps.draw()
-        a = (gl.GLuint * (3*d.width*d.height))(0)
         gl.glReadPixels(0, 0, d.width, d.height, gl.GL_RGB, gl.GL_UNSIGNED_INT, a)
-
+        w.set_caption(str(fps.get_fps()))
+        fps.tick()
     pyglet.clock.schedule(lambda x:d.mutate(3))
     pyglet.app.run()
 if __name__ == "__main__":
