@@ -1,10 +1,13 @@
 from random import randint, seed
 from pyglet import gl
 from pyglet.graphics import OrderedGroup, Batch, Group
-from pyglet import window
+from pyglet import window, image
 from time import sleep
 
 import pyglet
+import sys
+import numpy as np
+from math import log
 
 def clamp(x, lower, upper):
     if x > upper:
@@ -150,40 +153,141 @@ class Drawing:
 
             vertices.extend(t.serialize_points())
             colors.extend(t.serialize_color()*3)
-        print len(colors), len(self.triangles)*3*4
         self.vertex_list = self.batch.add(
             number_triangles*3, gl.GL_TRIANGLES, XTranslationGroup(self.width * 2, 1), 
             ("v2i/stream", vertices),
             ("c4B/stream", colors)
         )
 
-        for i in xrange(0, number_triangles):
-            self.vertex_list.vertices[i*6:(i*6)+6] = self.triangles[i].serialize_points()
-            self.vertex_list.colors[i*12:(i*12)+12] = self.triangles[i].serialize_color()*3
+        self.refresh_batch()
 
+image_pixels = None
+def compute_diff(array):
+    global keeps
+    a = np.frombuffer(array, dtype=np.uint8).astype(np.int32)
+    result = np.subtract(a, image_pixels)
+    result = np.square(result)
+    s = np.sum(result,dtype=long)
+    assert s > 0
+    return s
+def draw_parent(parent, width):
+    parent.blit(width,0)
 
+parent = None
+parentdiff = None
+keeps = []
+
+newdrawing = None
+olddrawing = None
+
+def update(dt):
+    global newdrawing
+    global olddrawing
+    olddrawing = newdrawing.clone()
+    newdrawing.mutate(5)
+    
+blitted = 0
+image_pixels = None
+i = 0
 def main():
-    width = 400
-    height = 400
+    global image_pixels
+    global keeps
+    global newdrawing, olddrawing
+    global blitted
+    pic = image.load(sys.argv[1])
+    width = pic.width
+    height = pic.height
+    size = width*height
+    #setup the drawing with 100 triangles
     b = Batch()
-    d = Drawing(width,height, b)
-    d.generate(100)
+    newdrawing = Drawing(width,height, b)
+    newdrawing.generate(400)
     w = window.Window(width*3,height,"cows", vsync = False)
     w.set_visible(True)
     gl.glEnable(gl.GL_BLEND)
     gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-        
     fps = pyglet.clock.Clock()
-    a = (gl.GLuint * (3*d.width*d.height))(0)
+    
+    #use this for pixel dumps
+    a = (gl.GLubyte * (4*size))(0)
+    print len(a)
+    @w.event
+    def on_close():
+        width,height = olddrawing.width,olddrawing.height
+        f = open(sys.argv[1] + ".svg","w")
+        f.write('''<?xml version="1.0" standalone="no"?>
+        <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+        "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+
+        <svg width="%dpx" height="%dpx" viewport="0 0 %d %d" version="1.1"
+        xmlns="http://www.w3.org/2000/svg">''' % (width,height,width,height))
+        f.write('''<rect width="100%" height="100%" style="fill:#000000;"/>''')
+        for triangle in olddrawing.triangles:
+            f.write('''<polygon points="%d,%d %d,%d, %d,%d" style="fill:#%02x%02x%02x; fill-opacity:%f;"/>''' % (
+                triangle.points[0][0],
+                height-triangle.points[0][1],
+                triangle.points[1][0],
+                height-triangle.points[1][1],
+                triangle.points[2][0],
+                height-triangle.points[2][1],
+                triangle.color[0],triangle.color[1],triangle.color[2],triangle.color[3]/255.0
+
+            ))
+        f.write("</svg>")
+        f.flush()
+        f.close()
+
     @w.event
     def on_draw():
         #w.clear()
-        d.draw()
-        gl.glReadPixels(d.width*2, 0, d.width, d.height, gl.GL_RGB, gl.GL_UNSIGNED_INT, a)
-        w.set_caption(str(fps.get_fps()))
+        global parent
+        global parentdiff
+        global olddrawing,newdrawing
+        global blitted
+        global image_pixels
+        global keeps
+        global i
+
+        if not blitted:
+            pic.blit(0,0)
+            blitted = 1
+            image_pixels = (gl.GLubyte * (4*size))(0)
+            gl.glReadPixels(0,
+                            0,
+                            newdrawing.width,
+                            newdrawing.height,
+                            gl.GL_RGBA,
+                            gl.GL_UNSIGNED_BYTE,
+                            image_pixels
+                           )
+            image_pixels = np.frombuffer(image_pixels, dtype=np.uint8).astype(np.int32)
+        newdrawing.draw()
+        gl.glReadPixels(newdrawing.width*2, 
+                        0, 
+                        newdrawing.width,
+                        newdrawing.height,
+                        gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, a)
+        diff = compute_diff(a)
+        
+        if parent == None or diff < parentdiff:
+            parent = image.ImageData(newdrawing.width,newdrawing.height,"RGBA",a)
+            parentdiff = diff
+            draw_parent(parent, newdrawing.width)
+        else:
+            newdrawing = olddrawing
+        i += 1
+        if (i % 20 == 0):
+            w.set_caption(str(fps.get_fps())+" "+str(parentdiff) + " ")
+        #pic.blit(0,0)
+        if not blitted:
+            pic.blit(0,0)
+            blitted = 1
+
         fps.tick()
-    pyglet.clock.schedule(lambda x:d.mutate(3))
+
+    pyglet.clock.schedule(update)
     pyglet.app.run()
+
+    
 if __name__ == "__main__":
-    seed(3)
     main()
