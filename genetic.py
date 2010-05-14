@@ -59,7 +59,7 @@ class Triangle:
         self.has_changed = True
 
     def reshape_delta(self, xmax, ymax, delta):
-        for i in xrange(0, randint(0,2)):
+        for i in xrange(0, randint(0,4)):
             choice = randint(0,len(self.points)-1)
             x,y = randint(-delta,delta), randint(-delta, delta)
             x += self.points[choice][0]
