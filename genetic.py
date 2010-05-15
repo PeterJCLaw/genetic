@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from random import randint, seed
 from pyglet import gl
 from pyglet.graphics import OrderedGroup, Batch, Group
@@ -43,11 +45,12 @@ class Triangle:
         return self.color[0:]
 
     def recolor_self_delta(self, delta):
-        new_red = clamp(self.color[0]+randint(-delta,delta),0,255);
-        new_green = clamp(self.color[1]+randint(-delta,delta),0,255);
-        new_blue = clamp(self.color[2]+randint(-delta,delta),0,255);
-        new_alpha = clamp(self.color[3]+randint(-delta,delta),0,255);
-        self.color = [new_red, new_green, new_blue, new_alpha]
+        color = self.color
+        new_red = clamp(color[0]+randint(-delta,delta),0,255);
+        new_green = clamp(color[1]+randint(-delta,delta),0,255);
+        new_blue = clamp(color[2]+randint(-delta,delta),0,255);
+        new_alpha = clamp(color[3]+randint(-delta,delta),0,255);
+        color = [new_red, new_green, new_blue, new_alpha]
         self.has_changed = True
     
     def generate(self, xmax, ymax):
@@ -62,14 +65,15 @@ class Triangle:
         self.has_changed = True
 
     def reshape_delta(self, xmax, ymax, delta):
+        points = self.points
         for i in xrange(0, randint(0,4)):
             choice = randint(0,len(self.points)-1)
             x,y = randint(-delta,delta), randint(-delta, delta)
-            x += self.points[choice][0]
-            y += self.points[choice][1]
+            x += points[choice][0]
+            y += points[choice][1]
             x = clamp(x, 0, xmax)
             y = clamp(y, 0, ymax)
-            self.points[choice] = (x,y)
+            points[choice] = (x,y)
         self.has_changed = True
 
 
@@ -111,7 +115,6 @@ class Drawing:
 
 
         d.triangles = [t.clone() for t in self.triangles]
-        assert len(d.triangles) == len(self.triangles)
         d.refresh_batch()
         return d
     def mutate(self, num_mutations):
@@ -165,11 +168,9 @@ image_pixels = None
 def compute_diff(array):
     global keeps
     a = np.frombuffer(array, dtype=np.uint8).astype(np.int32)
-    result = np.subtract(a, image_pixels)
-    result = np.square(result)
-    s = np.sum(result,dtype=long)
-    assert s > 0
-    return s
+    result = np.square(np.subtract(a, image_pixels))
+    
+    return np.sum(result, dtype=long)
 def draw_parent(parent, width):
     parent.blit(width,0)
 
@@ -277,7 +278,7 @@ def main():
             newdrawing = olddrawing
         i += 1
         if (i % 20 == 0):
-            w.set_caption(str(fps.get_fps())+" "+str(parentdiff) + " ")
+            w.set_caption(str(fps.get_fps())+" "+str(parentdiff) + " "+str(log(parentdiff,10)))
         #pic.blit(0,0)
         if not blitted:
             pic.blit(0,0)
