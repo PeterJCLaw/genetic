@@ -231,7 +231,7 @@ def main():
     #setup the drawing with 100 triangles
     b = Batch()
     newdrawing = Drawing(width,height, b)
-    newdrawing.generate(40)
+    newdrawing.generate(6)
     w = window.Window(width*3,height,"cows", vsync = False)
     w.set_visible(True)
     gl.glEnable(gl.GL_BLEND)
