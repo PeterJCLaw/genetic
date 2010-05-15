@@ -66,11 +66,17 @@ class Triangle:
 
     def recolor_self_delta(self, delta):
         color = self.color
-        new_red = clamp(color[0]+randint(-delta,delta),0,255);
-        new_green = clamp(color[1]+randint(-delta,delta),0,255);
-        new_blue = clamp(color[2]+randint(-delta,delta),0,255);
-        new_alpha = clamp(color[3]+randint(-delta,delta),0,255);
-        color = [new_red, new_green, new_blue, new_alpha]
+        x = randint(0,3)
+        new_red,new_green,new_blue,new_alpha = color
+        if x == 0:
+            new_red = clamp(color[0]+randint(-delta,delta),0,255);
+        elif x == 1:
+            new_green = clamp(color[1]+randint(-delta,delta),0,255);
+        elif x == 2:
+            new_blue = clamp(color[2]+randint(-delta,delta),0,255);
+        else:
+            new_alpha = clamp(color[3]+randint(-delta,delta),0,255);
+        self.color = [new_red, new_green, new_blue, new_alpha]
         self.has_changed = True
     
     def generate(self, xmax, ymax):
@@ -206,7 +212,7 @@ def update(dt):
     global olddrawing
     if(isinstance(newdrawing, Drawing) == False):
         newdrawing = Drawing(100,100,Batch())
-        newdrawing.generate(400)
+        newdrawing.generate(1)
     olddrawing = newdrawing.clone()
     newdrawing.mutate(5)
     
@@ -225,7 +231,7 @@ def main():
     #setup the drawing with 100 triangles
     b = Batch()
     newdrawing = Drawing(width,height, b)
-    newdrawing.generate(400)
+    newdrawing.generate(40)
     w = window.Window(width*3,height,"cows", vsync = False)
     w.set_visible(True)
     gl.glEnable(gl.GL_BLEND)
