@@ -163,8 +163,12 @@ class Drawing:
                 self.update_index(c1)
                 self.update_index(c2)
     def update_index(self, i):
-        self.vertex_list.vertices[i*6:(i*6)+6] = self.triangles[i].serialize_points()
-        self.vertex_list.colors[i*12:i*12+12] = self.triangles[i].serialize_color()*3               
+        vl = self.vertex_list
+        t = self.triangles[i]
+        i1 = i*6
+        vl.vertices[i1:i1+6] = t.serialize_points()
+        i1 *= 2
+        vl.colors[i1:i1+12] = t.serialize_color()*3
     
     def draw(self):
         self.batch.draw()
