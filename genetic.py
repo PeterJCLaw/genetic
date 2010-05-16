@@ -216,9 +216,6 @@ olddrawing = None
 def update(dt):
     global newdrawing
     global olddrawing
-    if(isinstance(newdrawing, Drawing) == False):
-        newdrawing = Drawing(100,100,Batch())
-        newdrawing.generate(1)
     olddrawing = newdrawing.clone()
     newdrawing.mutate(5)
     
@@ -297,10 +294,8 @@ def main():
                             image_pixels
                            )
             image_pixels = np.frombuffer(image_pixels, dtype=np.uint8).astype(np.int32)
-        if(isinstance(newdrawing, Drawing) == False):
-            newdrawing = Drawing(100,100,Batch())
-            newdrawing.generate(400)
         newdrawing.draw()
+
         gl.glReadPixels(newdrawing.width*2, 
                         0, 
                         newdrawing.width,
