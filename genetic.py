@@ -45,13 +45,11 @@ class Triangle:
     def __init__(self):
         self.points = []
         self.color = [0,0,0,255]
-        self.has_changed = False
     
     def clone(self):
         t = Triangle()
         t.points = self.points[0:]
         t.color = self.color[0:]
-        t.has_changed = self.has_changed 
         return t
 
     def serialize_points(self):
@@ -77,7 +75,6 @@ class Triangle:
         else:
             new_alpha = clamp(color[3]+randint(-delta,delta),0,255);
         self.color = [new_red, new_green, new_blue, new_alpha]
-        self.has_changed = True
     
     def generate(self, xmax, ymax):
         self.points = [0]*3
@@ -88,7 +85,6 @@ class Triangle:
         self.color[1] = randint(0,255)
         self.color[2] = randint(0,255)
         self.color[3] = randint(0,255)
-        self.has_changed = True
 
     def reshape_delta(self, xmax, ymax, delta):
         points = self.points
@@ -100,7 +96,6 @@ class Triangle:
             x = clamp(x, 0, xmax)
             y = clamp(y, 0, ymax)
             points[choice] = (x,y)
-        self.has_changed = True
 
 
 class XTranslationGroup(Group):
@@ -183,7 +178,6 @@ class Drawing:
         for i in xrange(0, number_triangles):
             t = Triangle()
             t.generate(self.width, self.height)        
-            t.has_changed = False
             self.triangles.append(t)
 
             vertices.extend(t.serialize_points())
