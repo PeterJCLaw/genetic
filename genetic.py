@@ -116,12 +116,15 @@ class XTranslationGroup(Group):
     def unset_state(self):
         gl.glPopMatrix()
         gl.glPopMatrix() 
+group = None
+
 class Drawing:
     def __init__(self, width, height, batch):
         self.width = width
         self.height = height
         self.triangles = []
         self.batch = batch
+        
         self.batch.add( 6, 
                         gl.GL_TRIANGLES,XTranslationGroup(2 * width, 0),
                         ("v2i/static", (0,0,0,height,width,height,width,height,width,0,0,0)),
@@ -131,10 +134,13 @@ class Drawing:
         
          
     def clone(self):
+        global group
         d = Drawing(self.width, self.height, Batch())
         bufferlength = len(self.triangles)
+        if (group == None):
+            group = XTranslationGroup(self.width * 2, 1)
         d.vertex_list = d.batch.add(
-            bufferlength*3, gl.GL_TRIANGLES, XTranslationGroup(self.width * 2, 1),
+            bufferlength*3, gl.GL_TRIANGLES, group,
             ("v2i/stream", [0]*bufferlength*6),
             ("c4B/stream", [0]*bufferlength*12)
         )
