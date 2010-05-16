@@ -314,7 +314,7 @@ def main():
             pyglet.app.exit()
         
         if (i % 20 == 0):
-            w.set_caption(str(fps.get_fps())+" "+str(parentdiff) + " " + str(log(parentdiff,10)) + str(i))
+            w.set_caption(str(fps.get_fps())+" "+str(parentdiff) + " " + str(log(parentdiff,10))+ " " + str(i))
         #pic.blit(0,0)
         if not blitted:
             pic.blit(0,0)
