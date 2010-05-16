@@ -199,10 +199,10 @@ class Drawing:
 image_pixels = None
 def compute_diff(array):
     global keeps
-    a = np.frombuffer(array, dtype=np.uint8).astype(np.int32)
+    a = np.frombuffer(array, dtype=np.uint8)
     result = np.square(np.subtract(a, image_pixels))
     
-    return np.sum(result, dtype=long)
+    return np.sum(result, dtype=np.uint64)
 def draw_parent(parent, width):
     parent.blit(width,0)
 
