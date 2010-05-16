@@ -234,7 +234,7 @@ def main():
     #setup the drawing with 100 triangles
     b = Batch()
     newdrawing = Drawing(width,height, b)
-    newdrawing.generate(6)
+    newdrawing.generate(60)
     w = window.Window(width*3,height,"cows", vsync = False)
     w.set_visible(True)
     gl.glEnable(gl.GL_BLEND)
@@ -321,7 +321,14 @@ def main():
 
     pyglet.clock.schedule(update)
     pyglet.app.run()
-
     
 if __name__ == "__main__":
-    main()
+    import cProfile,pstats
+    prof = cProfile.Profile()
+    prof = prof.runctx("main()", globals(), locals())
+    stats = pstats.Stats(prof)
+    stats.sort_stats("cumulative")
+    stats.print_stats(800)
+    stats.print_callees()
+    stats.print_callers()
+    #main()
