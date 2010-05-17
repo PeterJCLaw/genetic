@@ -231,7 +231,7 @@ def main():
     size = width*height
     b = Batch()
     newdrawing = Drawing(width,height, b)
-    newdrawing.generate(2)
+    newdrawing.generate(int(sys.argv[2]))
     w = window.Window(width*3,height,"cows", vsync = False)
     w.set_visible(True)
     gl.glEnable(gl.GL_BLEND)
