@@ -307,8 +307,6 @@ def main():
         else:
             newdrawing = olddrawing
         i += 1
-        if (i == 20000):
-            pyglet.app.exit()
         
         if (i % 20 == 0):
             w.set_caption(str(fps.get_fps())+" "+str(parentdiff) + " " + str(log(parentdiff,10))+ " " + str(i))
