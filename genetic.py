@@ -259,7 +259,7 @@ def main(image_file, num_polygons):
         xmlns="http://www.w3.org/2000/svg">''' % (width,height,width,height))
         f.write('\n\t<rect width="100%" height="100%" style="fill:#000000;"/>')
         for triangle in olddrawing.triangles:
-            f.write('''\n\t<polygon points="%d,%d %d,%d, %d,%d" style="fill:#%02x%02x%02x; fill-opacity:%f;"/>''' % (
+            f.write('''\n\t<polygon points="%d,%d %d,%d %d,%d" style="fill:#%02x%02x%02x; fill-opacity:%f;"/>''' % (
                 triangle.points[0][0],
                 height-triangle.points[0][1],
                 triangle.points[1][0],
