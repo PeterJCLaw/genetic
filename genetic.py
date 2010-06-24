@@ -225,18 +225,18 @@ blitted = 0
 image_pixels = None
 i = 0
 
-def main():
+def main(image_file, num_polygons):
     global image_pixels
     global keeps
     global newdrawing, olddrawing
     global blitted
-    pic = image.load(sys.argv[1])
+    pic = image.load(image_file)
     width = pic.width
     height = pic.height
     size = width*height
     b = Batch()
     newdrawing = Drawing(width,height, b)
-    newdrawing.generate(int(sys.argv[2]))
+    newdrawing.generate(num_polygons)
     w = window.Window(width*3,height,"cows", vsync = False)
     w.set_visible(True)
     gl.glEnable(gl.GL_BLEND)
@@ -250,7 +250,7 @@ def main():
     @w.event
     def on_close():
         width,height = olddrawing.width,olddrawing.height
-        f = open(sys.argv[1] + ".svg","w")
+        f = open(image_file + ".svg","w")
         f.write('''<?xml version="1.0" standalone="no"?>
         <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
         "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
@@ -337,4 +337,4 @@ if __name__ == "__main__":
     #stats.print_callers()
     if len(sys.argv) < 3:
         print 'Usage: genetic.py IMAGE_FILE NUM_POLYGONS'
-    main()
+    main(sys.argv[1], int(sys.argv[2]))
