@@ -335,6 +335,10 @@ def main(image_file, num_polygons=250):
         global i
 
         if not blitted:
+            """
+            At the start we've not seen the target before,
+            so draw it and store the pixel data.
+            """
             pic.blit(0,0)
             blitted = 1
             image_pixels = (gl.GLubyte * (4*size))(0)
@@ -347,8 +351,11 @@ def main(image_file, num_polygons=250):
                             image_pixels
                            )
             image_pixels = np.frombuffer(image_pixels, dtype=np.uint8).astype(np.int32)
+
+        # Draw the new child
         newdrawing.draw()
 
+        # Read the pixel data for the child and find out if its any good
         gl.glReadPixels(newdrawing.width*2,
                         0,
                         newdrawing.width,
@@ -357,14 +364,19 @@ def main(image_file, num_polygons=250):
         diff = compute_diff(a)
 
         if parent == None or diff < parentdiff:
+            # The new drawing is better.
+            # Redraw the parent as this child.
+            # Set this child's diff as the new one to beat.
             parent = image.ImageData(newdrawing.width,newdrawing.height,"RGBA",a)
             parentdiff = diff
             draw_parent(parent, newdrawing.width)
         else:
+            # The new drawing sucks. Replace it
             newdrawing = olddrawing
         i += 1
 
         if (i % 20 == 0):
+            # Use the window title to let the user know how we're doing
             w.set_caption(str(fps.get_fps())+" "+str(parentdiff) + " " + str(log(parentdiff,10))+ " " + str(i))
         #pic.blit(0,0)
         if not blitted:
@@ -373,7 +385,9 @@ def main(image_file, num_polygons=250):
 
         fps.tick()
 
+    # Isolate and mutate the child on each clock tick
     pyglet.clock.schedule(update)
+    # Set it running
     pyglet.app.run()
 
 if __name__ == "__main__":
