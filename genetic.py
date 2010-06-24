@@ -335,4 +335,6 @@ if __name__ == "__main__":
     #stats.print_stats(800)
     #stats.print_callees()
     #stats.print_callers()
+    if len(sys.argv) < 3:
+        print 'Usage: genetic.py IMAGE_FILE NUM_POLYGONS'
     main()
