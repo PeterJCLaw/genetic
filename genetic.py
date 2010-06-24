@@ -37,15 +37,15 @@ def clamp(x, lower, upper):
     elif x < lower:
         x = lower
     return x
-       
+
 
 
 class Triangle:
-    
+
     def __init__(self):
         self.points = []
         self.color = [0,0,0,255]
-    
+
     def clone(self):
         t = Triangle()
         t.points = self.points[0:]
@@ -75,7 +75,7 @@ class Triangle:
         else:
             new_alpha = clamp(color[3]+randint(-delta,delta),0,255);
         self.color = [new_red, new_green, new_blue, new_alpha]
-    
+
     def generate(self, xmax, ymax):
         self.points = [0]*3
         for i in xrange(0,3):
@@ -99,7 +99,7 @@ class Triangle:
 
 
 class XTranslationGroup(Group):
-    
+
     def __init__(self, x_translation, order):
         super(XTranslationGroup, self).__init__(parent=OrderedGroup(order))
         self._x_translation = x_translation
@@ -110,7 +110,8 @@ class XTranslationGroup(Group):
         gl.glPushMatrix()
     def unset_state(self):
         gl.glPopMatrix()
-        gl.glPopMatrix() 
+        gl.glPopMatrix()
+
 group = None
 
 class Drawing:
@@ -119,15 +120,13 @@ class Drawing:
         self.height = height
         self.triangles = []
         self.batch = batch
-        
-        self.batch.add( 6, 
+
+        self.batch.add( 6,
                         gl.GL_TRIANGLES,XTranslationGroup(2 * width, 0),
                         ("v2i/static", (0,0,0,height,width,height,width,height,width,0,0,0)),
                         ("c3B/static",[0,0,0]*6)
                       )
 
-        
-         
     def clone(self):
         global group
         d = Drawing(self.width, self.height, Batch())
@@ -144,6 +143,7 @@ class Drawing:
         d.triangles = [t.clone() for t in self.triangles]
         d.refresh_batch()
         return d
+
     def mutate(self, num_mutations):
         triangles = self.triangles
         for i in xrange(0, num_mutations):
@@ -162,6 +162,7 @@ class Drawing:
                 triangles[c1],triangles[c2] = triangles[c2],triangles[c1]
                 self.update_index(c1)
                 self.update_index(c2)
+
     def update_index(self, i):
         vl = self.vertex_list
         t = self.triangles[i]
@@ -169,25 +170,26 @@ class Drawing:
         vl.vertices[i1:i1+6] = t.serialize_points()
         i1 *= 2
         vl.colors[i1:i1+12] = t.serialize_color()*3
-    
+
     def draw(self):
         self.batch.draw()
+
     def refresh_batch(self):
         for i in xrange(0, len(self.triangles)):
             self.update_index(i)
-        
+
     def generate(self, number_triangles):
         vertices = []
         colors = []
         for i in xrange(0, number_triangles):
             t = Triangle()
-            t.generate(self.width, self.height)        
+            t.generate(self.width, self.height)
             self.triangles.append(t)
 
             vertices.extend(t.serialize_points())
             colors.extend(t.serialize_color()*3)
         self.vertex_list = self.batch.add(
-            number_triangles*3, gl.GL_TRIANGLES, XTranslationGroup(self.width * 2, 1), 
+            number_triangles*3, gl.GL_TRIANGLES, XTranslationGroup(self.width * 2, 1),
             ("v2i/stream", vertices),
             ("c4B/stream", colors)
         )
@@ -195,12 +197,14 @@ class Drawing:
         self.refresh_batch()
 
 image_pixels = None
+
 def compute_diff(array):
     global keeps
     a = np.frombuffer(array, dtype=np.uint8)
     result = np.square(np.subtract(a, image_pixels))
-    
+
     return np.sum(result, dtype=np.uint64)
+
 def draw_parent(parent, width):
     parent.blit(width,0)
 
@@ -216,10 +220,11 @@ def update(dt):
     global olddrawing
     olddrawing = newdrawing.clone()
     newdrawing.mutate(5)
-    
+
 blitted = 0
 image_pixels = None
 i = 0
+
 def main():
     global image_pixels
     global keeps
@@ -237,10 +242,11 @@ def main():
     gl.glEnable(gl.GL_BLEND)
     gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
     fps = pyglet.clock.Clock()
-    
+
     #use this for pixel dumps
     a = (gl.GLubyte * (4*size))(0)
     print len(a)
+
     @w.event
     def on_close():
         width,height = olddrawing.width,olddrawing.height
@@ -293,13 +299,13 @@ def main():
             image_pixels = np.frombuffer(image_pixels, dtype=np.uint8).astype(np.int32)
         newdrawing.draw()
 
-        gl.glReadPixels(newdrawing.width*2, 
-                        0, 
+        gl.glReadPixels(newdrawing.width*2,
+                        0,
                         newdrawing.width,
                         newdrawing.height,
                         gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, a)
         diff = compute_diff(a)
-        
+
         if parent == None or diff < parentdiff:
             parent = image.ImageData(newdrawing.width,newdrawing.height,"RGBA",a)
             parentdiff = diff
@@ -307,7 +313,7 @@ def main():
         else:
             newdrawing = olddrawing
         i += 1
-        
+
         if (i % 20 == 0):
             w.set_caption(str(fps.get_fps())+" "+str(parentdiff) + " " + str(log(parentdiff,10))+ " " + str(i))
         #pic.blit(0,0)
@@ -319,7 +325,7 @@ def main():
 
     pyglet.clock.schedule(update)
     pyglet.app.run()
-    
+
 if __name__ == "__main__":
     #import cProfile,pstats
     #prof = cProfile.Profile()
