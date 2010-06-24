@@ -378,10 +378,6 @@ def main(image_file, num_polygons=250):
         if (i % 20 == 0):
             # Use the window title to let the user know how we're doing
             w.set_caption(str(fps.get_fps())+" "+str(parentdiff) + " " + str(log(parentdiff,10))+ " " + str(i))
-        #pic.blit(0,0)
-        if not blitted:
-            pic.blit(0,0)
-            blitted = 1
 
         fps.tick()
 
