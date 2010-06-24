@@ -124,7 +124,7 @@ class Drawing:
         self.batch.add( 6,
                         gl.GL_TRIANGLES,XTranslationGroup(2 * width, 0),
                         ("v2i/static", (0,0,0,height,width,height,width,height,width,0,0,0)),
-                        ("c3B/static",[0,0,0]*6)
+                        ("c3B/static",[255,255,255]*6)
                       )
 
     def clone(self):
