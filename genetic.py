@@ -31,6 +31,8 @@ import sys
 import numpy as np
 from math import log
 
+from BeautifulSoup import BeautifulStoneSoup
+
 def clamp(x, lower, upper):
     if x > upper:
         x = upper
@@ -190,6 +192,54 @@ class Drawing:
             colors.extend(t.serialize_color()*3)
         self.vertex_list = self.batch.add(
             number_triangles*3, gl.GL_TRIANGLES, XTranslationGroup(self.width * 2, 1),
+            ("v2i/stream", vertices),
+            ("c4B/stream", colors)
+        )
+
+        self.refresh_batch()
+
+    def svg_import(self, file):
+        xml = open(file).read()
+        soup = BeautifulStoneSoup(xml).svg
+
+        self.width = int(soup['width'].replace('px', ''))
+        self.height = int(soup['height'].replace('px', ''))
+
+        polygons = soup.findAll('polygon')
+
+        vertices = []
+        colors = []
+        for p in polygons:
+            pts = p['points'].split(' ')
+
+            T = Triangle()
+
+            for i in range(0, len(pts)):
+                x,y = pts[i].split(',')
+                T.points.append([int(x), self.height - int(y)])
+
+            sty = p['style'].replace('; ', ';').split(';')
+
+            for opt in sty:
+                try:
+                    name,value = opt.split(':')
+                except ValueError:
+                    continue
+
+                if name == 'fill':
+                    T.color[0] = int(value[1:2], 16)
+                    T.color[1] = int(value[3:4], 16)
+                    T.color[2] = int(value[5:6], 16)
+
+                elif name == 'fill-opacity':
+                    T.color[3] = int(255.0*float(value))
+
+            self.triangles.append(T)
+
+            vertices.extend(T.serialize_points())
+            colors.extend(T.serialize_color()*3)
+        self.vertex_list = self.batch.add(
+            len(polygons)*3, gl.GL_TRIANGLES, XTranslationGroup(self.width * 2, 1),
             ("v2i/stream", vertices),
             ("c4B/stream", colors)
         )
