@@ -225,7 +225,7 @@ blitted = 0
 image_pixels = None
 i = 0
 
-def main(image_file, num_polygons):
+def main(image_file, num_polygons=250):
     global image_pixels
     global keeps
     global newdrawing, olddrawing
@@ -336,6 +336,10 @@ if __name__ == "__main__":
     #stats.print_callees()
     #stats.print_callers()
     if len(sys.argv) < 3:
-        print 'Usage: genetic.py IMAGE_FILE NUM_POLYGONS'
-        sys.exit(1)
-    main(sys.argv[1], int(sys.argv[2]))
+        if len(sys.argv) < 2:
+            print 'Usage: genetic.py IMAGE_FILE [NUM_POLYGONS=250]'
+            sys.exit(1)
+        else:
+            main(sys.argv[1])
+    else:
+        main(sys.argv[1], int(sys.argv[2]))
