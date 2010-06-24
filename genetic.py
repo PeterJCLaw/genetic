@@ -115,11 +115,11 @@ class XTranslationGroup(Group):
 group = None
 
 class Drawing:
-    def __init__(self, width, height, batch):
+    def __init__(self, width, height):
         self.width = width
         self.height = height
         self.triangles = []
-        self.batch = batch
+        self.batch = Batch()
 
         self.batch.add( 6,
                         gl.GL_TRIANGLES,XTranslationGroup(2 * width, 0),
@@ -129,7 +129,7 @@ class Drawing:
 
     def clone(self):
         global group
-        d = Drawing(self.width, self.height, Batch())
+        d = Drawing(self.width, self.height)
         bufferlength = len(self.triangles)
         if (group == None):
             group = XTranslationGroup(self.width * 2, 1)
@@ -234,8 +234,8 @@ def main(image_file, num_polygons):
     width = pic.width
     height = pic.height
     size = width*height
-    b = Batch()
-    newdrawing = Drawing(width,height, b)
+
+    newdrawing = Drawing(width,height)
     newdrawing.generate(num_polygons)
     w = window.Window(width*3,height,"cows", vsync = False)
     w.set_visible(True)
