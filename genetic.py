@@ -257,9 +257,9 @@ def main(image_file, num_polygons):
 
         <svg width="%dpx" height="%dpx" viewport="0 0 %d %d" version="1.1"
         xmlns="http://www.w3.org/2000/svg">''' % (width,height,width,height))
-        f.write('''<rect width="100%" height="100%" style="fill:#000000;"/>''')
+        f.write('\n\t<rect width="100%" height="100%" style="fill:#000000;"/>')
         for triangle in olddrawing.triangles:
-            f.write('''<polygon points="%d,%d %d,%d, %d,%d" style="fill:#%02x%02x%02x; fill-opacity:%f;"/>''' % (
+            f.write('''\n\t<polygon points="%d,%d %d,%d, %d,%d" style="fill:#%02x%02x%02x; fill-opacity:%f;"/>''' % (
                 triangle.points[0][0],
                 height-triangle.points[0][1],
                 triangle.points[1][0],
@@ -269,7 +269,7 @@ def main(image_file, num_polygons):
                 triangle.color[0],triangle.color[1],triangle.color[2],triangle.color[3]/255.0
 
             ))
-        f.write("</svg>")
+        f.write("\n</svg>")
         f.flush()
         f.close()
 
