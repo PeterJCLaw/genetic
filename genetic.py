@@ -27,7 +27,7 @@ from pyglet import window, image
 from time import sleep
 
 import pyglet
-import sys
+import os,sys
 import numpy as np
 from math import log
 
@@ -343,10 +343,17 @@ def main(image_file, num_polygons=250, resume=False):
 
     newdrawing = Drawing(width,height)
 
-    if resume:
-        newdrawing.svg_import(image_file + '.svg')
+    try:
+        os.path.isfile(resume)
+    except TypeError:
+        svg_file = image_file + '.svg'
+        if resume == True:
+            newdrawing.svg_import(svg_file)
+        else:
+            newdrawing.generate(num_polygons)
     else:
-        newdrawing.generate(num_polygons)
+        newdrawing.svg_import(resume)
+        svg_file = resume
 
     w = window.Window(width*3,height,"cows", vsync = False)
     w.set_visible(True)
@@ -359,7 +366,7 @@ def main(image_file, num_polygons=250, resume=False):
 
     @w.event
     def on_close():
-        olddrawing.svg_export(image_file, image_file+'.svg')
+        olddrawing.svg_export(image_file, svg_file)
 
     @w.event
     def on_draw():
@@ -436,20 +443,27 @@ if __name__ == "__main__":
     polygons = 250
     resume = False
     try:
-        if len(sys.argv) > 3:
+        if len(sys.argv) > 4:
             raise Exception('Too many arguments.')
         elif sys.argv[2][0:11] == '--polygons=':
+            if len(sys.argv) > 3:
+                raise Exception('Too many arguments.')
             polygons = int(sys.argv[2][11:])
             print 'Using custom number of polygons (%d).' % polygons
         elif sys.argv[2][0:8] == '--resume':
-            resume = len(sys.argv[2]) == 8 or sys.argv[2][9:14].tolower() != 'False'
-            print 'Resuming from previous session.'
+            resume = len(sys.argv[2]) == 8 or sys.argv[2][9:14].lower() != 'false'
+            try:
+                resume = sys.argv[3]
+                print 'Resuming from previous session using %s.' % resume
+            except IndexError:
+                print 'Resuming from previous session using default path.'
         else:
             raise Exception('Invalid argument.')
     except Exception as e:
         if len(sys.argv) != 2:
             print e
-            print 'Usage: genetic.py IMAGE_FILE [--polygons=250|--resume=False]'
+            print 'Usage: genetic.py IMAGE_FILE [--polygons=250]'
+            print '   or: genetic.py IMAGE_FILE [--resume=False [SVG_FILE]]'
             sys.exit(1)
         else:
             main(sys.argv[1])
