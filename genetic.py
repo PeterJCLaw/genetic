@@ -405,11 +405,21 @@ if __name__ == "__main__":
     #stats.print_stats(800)
     #stats.print_callees()
     #stats.print_callers()
-    if len(sys.argv) < 3:
-        if len(sys.argv) < 2:
-            print 'Usage: genetic.py IMAGE_FILE [NUM_POLYGONS=250]'
+    polygons = 250
+    try:
+        if len(sys.argv) > 3:
+            raise Exception('Too many arguments.')
+        elif sys.argv[2][0:11] == '--polygons=':
+            polygons = int(sys.argv[2][11:])
+            print 'Using custom number of polygons (%d).' % polygons
+        else:
+            raise Exception('Invalid argument.')
+    except Exception as e:
+        if len(sys.argv) != 2:
+            print e
+            print 'Usage: genetic.py IMAGE_FILE [--polygons=250]'
             sys.exit(1)
         else:
             main(sys.argv[1])
     else:
-        main(sys.argv[1], int(sys.argv[2]))
+        main(sys.argv[1], num_polygons=polygons)
