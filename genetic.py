@@ -215,7 +215,6 @@ class Drawing:
     def draw(self):
         gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, self.fb)
         self.batch.draw()
-        gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, 0)
 
     def refresh_batch(self):
         for i in xrange(0, len(self.triangles)):
@@ -333,6 +332,7 @@ def compute_diff(array):
     return np.sum(result, dtype=np.uint64)
 
 def draw_parent(parent, width):
+    gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, 0)
     parent.blit(width,0)
 
 parent = None
@@ -431,13 +431,11 @@ def main(image_file, num_polygons=250, resume=False):
         newdrawing.draw()
 
         # Read the pixel data for the child and find out if its any good
-        gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, newdrawing.fb)
         gl.glReadPixels(0,
                         0,
                         newdrawing.width,
                         newdrawing.height,
                         gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, a)
-        gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, 0)
         diff = compute_diff(a)
 
         if parent == None or diff < parentdiff:
