@@ -230,8 +230,11 @@ class Drawing:
         soup = BeautifulStoneSoup(xml).svg
 
         # Width and Height
-        w = self.width = int(soup['width'].replace('px', ''))
-        h = self.height = int(soup['height'].replace('px', ''))
+        w = int(soup['width'].replace('px', ''))
+        h = int(soup['height'].replace('px', ''))
+
+        if w != self.width or h != self.height:
+            raise Exception("Image dimensions don't match.")
 
         self.bg.vertices = [0,0,0,h,w,h,w,h,w,0,0,0]
 
