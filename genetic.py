@@ -40,8 +40,6 @@ def clamp(x, lower, upper):
         x = lower
     return x
 
-
-
 class Triangle:
 
     def __init__(self):
@@ -167,7 +165,6 @@ class Drawing:
             ("v2i/stream", [0]*bufferlength*6),
             ("c4B/stream", [0]*bufferlength*12)
         )
-
 
         d.triangles = [t.clone() for t in self.triangles]
         d.refresh_batch()
