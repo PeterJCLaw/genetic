@@ -308,18 +308,24 @@ blitted = 0
 image_pixels = None
 i = 0
 
-def main(image_file, num_polygons=250):
+def main(image_file, num_polygons=250, resume=False):
     global image_pixels
     global keeps
     global newdrawing, olddrawing
     global blitted
+
     pic = image.load(image_file)
     width = pic.width
     height = pic.height
     size = width*height
 
     newdrawing = Drawing(width,height)
-    newdrawing.generate(num_polygons)
+
+    if resume:
+        newdrawing.svg_import(image_file + '.svg')
+    else:
+        newdrawing.generate(num_polygons)
+
     w = window.Window(width*3,height,"cows", vsync = False)
     w.set_visible(True)
     gl.glEnable(gl.GL_BLEND)
@@ -406,20 +412,24 @@ if __name__ == "__main__":
     #stats.print_callees()
     #stats.print_callers()
     polygons = 250
+    resume = False
     try:
         if len(sys.argv) > 3:
             raise Exception('Too many arguments.')
         elif sys.argv[2][0:11] == '--polygons=':
             polygons = int(sys.argv[2][11:])
             print 'Using custom number of polygons (%d).' % polygons
+        elif sys.argv[2][0:8] == '--resume':
+            resume = len(sys.argv[2]) == 8 or sys.argv[2][9:14].tolower() != 'False'
+            print 'Resuming from previous session.'
         else:
             raise Exception('Invalid argument.')
     except Exception as e:
         if len(sys.argv) != 2:
             print e
-            print 'Usage: genetic.py IMAGE_FILE [--polygons=250]'
+            print 'Usage: genetic.py IMAGE_FILE [--polygons=250|--resume=False]'
             sys.exit(1)
         else:
             main(sys.argv[1])
     else:
-        main(sys.argv[1], num_polygons=polygons)
+        main(sys.argv[1], num_polygons=polygons, resume=resume)
