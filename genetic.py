@@ -25,13 +25,12 @@ from pyglet import gl
 from pyglet.graphics import OrderedGroup, Batch, Group
 from pyglet import window, image
 from time import sleep
+from math import log
+from BeautifulSoup import BeautifulStoneSoup
 
 import pyglet
 import sys
 import numpy as np
-from math import log
-
-from BeautifulSoup import BeautifulStoneSoup
 
 def clamp(x, lower, upper):
     if x > upper:
