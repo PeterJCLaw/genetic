@@ -29,7 +29,7 @@ from math import log
 from BeautifulSoup import BeautifulStoneSoup
 
 import pyglet
-import sys
+import os,sys
 import numpy as np
 
 def clamp(x, lower, upper):
@@ -38,8 +38,6 @@ def clamp(x, lower, upper):
     elif x < lower:
         x = lower
     return x
-
-
 
 class Triangle:
 
@@ -142,21 +140,22 @@ class XTranslationGroup(Group):
 group = None
 
 class Drawing:
-    def __init__(self, width, height):
+    def __init__(self, width, height, background=[255,255,255]):
         self.width = width
         self.height = height
         self.triangles = []
         self.batch = Batch()
+        self.bg_colour = background
 
-        self.batch.add( 6,
+        self.bg = self.batch.add( 6,
                         gl.GL_TRIANGLES,XTranslationGroup(2 * width, 0),
                         ("v2i/static", (0,0,0,height,width,height,width,height,width,0,0,0)),
-                        ("c3B/static",[255,255,255]*6)
+                        ("c3B/static",background*6)
                       )
 
     def clone(self):
         global group
-        d = Drawing(self.width, self.height)
+        d = Drawing(self.width, self.height, self.bg_colour)
         bufferlength = len(self.triangles)
         if (group == None):
             group = XTranslationGroup(self.width * 2, 1)
@@ -165,7 +164,6 @@ class Drawing:
             ("v2i/stream", [0]*bufferlength*6),
             ("c4B/stream", [0]*bufferlength*12)
         )
-
 
         d.triangles = [t.clone() for t in self.triangles]
         d.refresh_batch()
@@ -223,16 +221,36 @@ class Drawing:
 
         self.refresh_batch()
 
-    def svg_import(self, file):
+    def svg_import(self, svg_file):
         """
         Import the drawing from an SVG file.
         """
-        xml = open(file).read()
+        xml = open(svg_file).read()
         soup = BeautifulStoneSoup(xml).svg
 
-        self.width = int(soup['width'].replace('px', ''))
-        self.height = int(soup['height'].replace('px', ''))
+        # Width and Height
+        w = int(soup['width'].replace('px', ''))
+        h = int(soup['height'].replace('px', ''))
 
+        if w != self.width or h != self.height:
+            raise Exception("Image dimensions don't match.")
+
+        self.bg.vertices = [0,0,0,h,w,h,w,h,w,0,0,0]
+
+        # Background colours
+        try:
+            name,value = soup.rect['style'].split(':')
+        except ValueError:
+            pass
+
+        if name == 'fill':
+            self.bg_colour[0] = int(value[1:3], 16)
+            self.bg_colour[1] = int(value[3:5], 16)
+            self.bg_colour[2] = int(value[5:7], 16)
+
+        self.bg.colors = self.bg_colour*6
+
+        # Polygons
         polygons = soup.findAll('polygon')
 
         vertices = []
@@ -252,20 +270,24 @@ class Drawing:
 
         self.refresh_batch()
 
-    def svg_export(self, file):
+    def svg_export(self, image_file, svg_file):
         """
         Export the drawing to an SVG file.
         """
-        f = open(file,"w")
+
+        f = open(svg_file,"w")
         f.write('''<?xml version="1.0" standalone="no"?>
         <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
         "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 
         <svg width="%dpx" height="%dpx" viewport="0 0 %d %d" version="1.1"
         xmlns="http://www.w3.org/2000/svg">''' % (self.width,self.height,self.width,self.height))
-        f.write('\n\t<rect width="100%" height="100%" style="fill:#000000;"/>')
-        for t in olddrawing.triangles:
-            f.write('''\n\t<polygon points="%d,%d %d,%d %d,%d" style="fill:#%02x%02x%02x; fill-opacity:%f;"/>''' % (
+
+        f.write('\n\t<rect width="100%%" height="100%%" style="fill:#%02x%02x%02x;" />' %
+                ( self.bg_colour[0],self.bg_colour[1],self.bg_colour[2] )
+            )
+        for t in self.triangles:
+            f.write('''\n\t<polygon points="%d,%d %d,%d %d,%d" style="fill:#%02x%02x%02x; fill-opacity:%f;" />''' % (
                 t.points[0][0],
                 self.height - t.points[0][1],
                 t.points[1][0],
@@ -320,10 +342,17 @@ def main(image_file, num_polygons=250, resume=False):
 
     newdrawing = Drawing(width,height)
 
-    if resume:
-        newdrawing.svg_import(image_file + '.svg')
+    try:
+        os.path.isfile(resume)
+    except TypeError:
+        svg_file = image_file + '.svg'
+        if resume == True:
+            newdrawing.svg_import(svg_file)
+        else:
+            newdrawing.generate(num_polygons)
     else:
-        newdrawing.generate(num_polygons)
+        newdrawing.svg_import(resume)
+        svg_file = resume
 
     w = window.Window(width*3,height,"cows", vsync = False)
     w.set_visible(True)
@@ -336,7 +365,7 @@ def main(image_file, num_polygons=250, resume=False):
 
     @w.event
     def on_close():
-        olddrawing.svg_export(image_file + '.svg')
+        olddrawing.svg_export(image_file, svg_file)
 
     @w.event
     def on_draw():
@@ -413,20 +442,27 @@ if __name__ == "__main__":
     polygons = 250
     resume = False
     try:
-        if len(sys.argv) > 3:
+        if len(sys.argv) > 4:
             raise Exception('Too many arguments.')
         elif sys.argv[2][0:11] == '--polygons=':
+            if len(sys.argv) > 3:
+                raise Exception('Too many arguments.')
             polygons = int(sys.argv[2][11:])
             print 'Using custom number of polygons (%d).' % polygons
         elif sys.argv[2][0:8] == '--resume':
-            resume = len(sys.argv[2]) == 8 or sys.argv[2][9:14].tolower() != 'False'
-            print 'Resuming from previous session.'
+            resume = len(sys.argv[2]) == 8 or sys.argv[2][9:14].lower() != 'false'
+            try:
+                resume = sys.argv[3]
+                print 'Resuming from previous session using %s.' % resume
+            except IndexError:
+                print 'Resuming from previous session using default path.'
         else:
             raise Exception('Invalid argument.')
     except Exception as e:
         if len(sys.argv) != 2:
             print e
-            print 'Usage: genetic.py IMAGE_FILE [--polygons=250|--resume=False]'
+            print 'Usage: genetic.py IMAGE_FILE [--polygons=250]'
+            print '   or: genetic.py IMAGE_FILE [--resume=False [SVG_FILE]]'
             sys.exit(1)
         else:
             main(sys.argv[1])
