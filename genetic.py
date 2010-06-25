@@ -273,7 +273,6 @@ class Drawing:
         Export the drawing to an SVG file.
         """
 
-
         f = open(svg_file,"w")
         f.write('''<?xml version="1.0" standalone="no"?>
         <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
@@ -281,6 +280,7 @@ class Drawing:
 
         <svg width="%dpx" height="%dpx" viewport="0 0 %d %d" version="1.1"
         xmlns="http://www.w3.org/2000/svg">''' % (self.width,self.height,self.width,self.height))
+
         f.write('\n\t<rect width="100%%" height="100%%" style="fill:#%02x%02x%02x;" />' %
                 ( self.bg_colour[0],self.bg_colour[1],self.bg_colour[2] )
             )
