@@ -65,6 +65,9 @@ class Triangle:
         return self.color[0:]
 
     def svg_soup_import(self, soup, height):
+        """
+        Import the triangle from a BeatufilSoup SVG polygon.
+        """
         pts = soup['points'].split(' ')
 
         for i in range(0, len(pts)):
@@ -222,6 +225,9 @@ class Drawing:
         self.refresh_batch()
 
     def svg_import(self, file):
+        """
+        Import the drawing from an SVG file.
+        """
         xml = open(file).read()
         soup = BeautifulStoneSoup(xml).svg
 
