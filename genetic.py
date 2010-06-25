@@ -232,9 +232,24 @@ class Drawing:
         xml = open(file).read()
         soup = BeautifulStoneSoup(xml).svg
 
+        # Width and Height
         self.width = int(soup['width'].replace('px', ''))
         self.height = int(soup['height'].replace('px', ''))
 
+        # Background colours
+        try:
+            name,value = soup.rect['style'].split(':')
+        except ValueError:
+            pass
+
+        if name == 'fill':
+            self.bg_colour[0] = int(value[1:3], 16)
+            self.bg_colour[1] = int(value[3:5], 16)
+            self.bg_colour[2] = int(value[5:7], 16)
+
+        self.bg.colors = self.bg_colour*6
+
+        # Polygons
         polygons = soup.findAll('polygon')
 
         vertices = []
