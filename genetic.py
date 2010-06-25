@@ -31,6 +31,7 @@ from BeautifulSoup import BeautifulStoneSoup
 import pyglet
 import os,sys
 import numpy as np
+import ctypes
 
 def clamp(x, lower, upper):
     if x > upper:
@@ -146,19 +147,34 @@ class Drawing:
         self.triangles = []
         self.batch = Batch()
         self.bg_colour = background
+        has_fbo = gl.gl_info.have_extension('GL_EXT_framebuffer_object')
+
+        #setup a framebuffer
+        self.fb = gl.GLuint()
+        gl.glGenFramebuffersEXT(1, ctypes.byref(self.fb))
+        gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, self.fb)
+
+        #allocate a texture for the fb to render to
+        tex = image.Texture.create_for_size(gl.GL_TEXTURE_2D, width, height, gl.GL_RGBA)
+        gl.glBindTexture(gl.GL_TEXTURE_2D, tex.id)
+        gl.glFramebufferTexture2DEXT(gl.GL_FRAMEBUFFER_EXT, gl.GL_COLOR_ATTACHMENT0_EXT, gl.GL_TEXTURE_2D, tex.id, 0)
+
+        status = gl.glCheckFramebufferStatusEXT(gl.GL_FRAMEBUFFER_EXT)
+        assert status == gl.GL_FRAMEBUFFER_COMPLETE_EXT
+
+        gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, 0)
 
         self.bg = self.batch.add( 6,
-                        gl.GL_TRIANGLES,XTranslationGroup(2 * width, 0),
+                        gl.GL_TRIANGLES,None,
                         ("v2i/static", (0,0,0,height,width,height,width,height,width,0,0,0)),
                         ("c3B/static",background*6)
                       )
+
 
     def clone(self):
         global group
         d = Drawing(self.width, self.height, self.bg_colour)
         bufferlength = len(self.triangles)
-        if (group == None):
-            group = XTranslationGroup(self.width * 2, 1)
         d.vertex_list = d.batch.add(
             bufferlength*3, gl.GL_TRIANGLES, group,
             ("v2i/stream", [0]*bufferlength*6),
@@ -197,7 +213,9 @@ class Drawing:
         vl.colors[i1:i1+12] = t.serialize_color()*3
 
     def draw(self):
+        gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, self.fb)
         self.batch.draw()
+        gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, 0)
 
     def refresh_batch(self):
         for i in xrange(0, len(self.triangles)):
@@ -214,7 +232,7 @@ class Drawing:
             vertices.extend(t.serialize_points())
             colors.extend(t.serialize_color()*3)
         self.vertex_list = self.batch.add(
-            number_triangles*3, gl.GL_TRIANGLES, XTranslationGroup(self.width * 2, 1),
+            number_triangles*3, gl.GL_TRIANGLES, None,
             ("v2i/stream", vertices),
             ("c4B/stream", colors)
         )
@@ -354,7 +372,7 @@ def main(image_file, num_polygons=250, resume=False):
         newdrawing.svg_import(resume)
         svg_file = resume
 
-    w = window.Window(width*3,height,"cows", vsync = False)
+    w = window.Window(width*2,height,"cows", vsync = False)
     w.set_visible(True)
     gl.glEnable(gl.GL_BLEND)
     gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
@@ -400,11 +418,13 @@ def main(image_file, num_polygons=250, resume=False):
         newdrawing.draw()
 
         # Read the pixel data for the child and find out if its any good
-        gl.glReadPixels(newdrawing.width*2,
+        gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, newdrawing.fb)
+        gl.glReadPixels(0,
                         0,
                         newdrawing.width,
                         newdrawing.height,
                         gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, a)
+        gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, 0)
         diff = compute_diff(a)
 
         if parent == None or diff < parentdiff:
@@ -416,6 +436,8 @@ def main(image_file, num_polygons=250, resume=False):
             draw_parent(parent, newdrawing.width)
         else:
             # The new drawing sucks. Replace it
+            # dump it's framebuffer first though!!!!
+            gl.glDeleteFramebuffersEXT(1, ctypes.byref(newdrawing.fb))
             newdrawing = olddrawing
         i += 1
 
