@@ -199,6 +199,7 @@ class Drawing:
 
     def draw(self):
         gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, self.fb)
+        gl.glClear(gl.GL_COLOR_BUFFER_BIT)
         self.batch.draw()
 
     def refresh_batch(self):
