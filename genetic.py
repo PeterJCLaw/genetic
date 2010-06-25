@@ -230,8 +230,10 @@ class Drawing:
         soup = BeautifulStoneSoup(xml).svg
 
         # Width and Height
-        self.width = int(soup['width'].replace('px', ''))
-        self.height = int(soup['height'].replace('px', ''))
+        w = self.width = int(soup['width'].replace('px', ''))
+        h = self.height = int(soup['height'].replace('px', ''))
+
+        self.bg.vertices = [0,0,0,h,w,h,w,h,w,0,0,0]
 
         # Background colours
         try:
