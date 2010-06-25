@@ -252,8 +252,13 @@ class Drawing:
 
         if w != self.width or h != self.height:
             raise Exception("Image dimensions don't match.")
-
-        self.bg.vertices = [0,0,0,h,w,h,w,h,w,0,0,0]
+        # two clockwise round triangles make a square
+        self.bg.vertices = [ 0,0,
+                             0,h,
+                             w,h,
+                             w,h,
+                             w,0,
+                             0,0]
 
         # Background colours
         try:
