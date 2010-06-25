@@ -83,9 +83,9 @@ class Triangle:
                 continue
 
             if name == 'fill':
-                self.color[0] = int(value[1:2], 16)
-                self.color[1] = int(value[3:4], 16)
-                self.color[2] = int(value[5:6], 16)
+                self.color[0] = int(value[1:3], 16)
+                self.color[1] = int(value[3:5], 16)
+                self.color[2] = int(value[5:7], 16)
 
             elif name == 'fill-opacity':
                 self.color[3] = int(255.0*float(value))
