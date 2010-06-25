@@ -148,9 +148,9 @@ class Drawing:
         self.height = height
         self.triangles = []
         self.batch = Batch()
-        self.background = background
+        self.bg_colour = background
 
-        self.batch.add( 6,
+        self.bg = self.batch.add( 6,
                         gl.GL_TRIANGLES,XTranslationGroup(2 * width, 0),
                         ("v2i/static", (0,0,0,height,width,height,width,height,width,0,0,0)),
                         ("c3B/static",background*6)
@@ -158,7 +158,7 @@ class Drawing:
 
     def clone(self):
         global group
-        d = Drawing(self.width, self.height, self.background)
+        d = Drawing(self.width, self.height, self.bg_colour)
         bufferlength = len(self.triangles)
         if (group == None):
             group = XTranslationGroup(self.width * 2, 1)
@@ -266,7 +266,7 @@ class Drawing:
         <svg width="%dpx" height="%dpx" viewport="0 0 %d %d" version="1.1"
         xmlns="http://www.w3.org/2000/svg">''' % (self.width,self.height,self.width,self.height))
         f.write('\n\t<rect width="100%%" height="100%%" style="fill:#%02x%02x%02x;"/>' %
-                ( self.background[0],self.background[1],self.background[2] )
+                ( self.bg_colour[0],self.bg_colour[1],self.bg_colour[2] )
             )
         for t in self.triangles:
             f.write('''\n\t<polygon points="%d,%d %d,%d %d,%d" style="fill:#%02x%02x%02x; fill-opacity:%f;"/>''' % (
