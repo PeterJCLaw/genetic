@@ -345,6 +345,13 @@ olddrawing = None
 def update(dt):
     global newdrawing
     global olddrawing
+
+    #delete stale framebuffers
+    fbref = None
+    if olddrawing is not None and olddrawing != newdrawing:
+        fbref = olddrawing.fb
+        gl.glDeleteFramebuffersEXT(1, ctypes.byref(fbref))
+
     olddrawing = newdrawing.clone()
     newdrawing.mutate(5)
 
