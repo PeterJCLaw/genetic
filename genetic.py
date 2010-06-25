@@ -64,6 +64,29 @@ class Triangle:
     def serialize_color(self):
         return self.color[0:]
 
+    def svg_soup_import(self, soup, height):
+        pts = soup['points'].split(' ')
+
+        for i in range(0, len(pts)):
+            x,y = pts[i].split(',')
+            self.points.append([int(x), height - int(y)])
+
+        sty = soup['style'].replace('; ', ';').split(';')
+
+        for opt in sty:
+            try:
+                name,value = opt.split(':')
+            except ValueError:
+                continue
+
+            if name == 'fill':
+                self.color[0] = int(value[1:2], 16)
+                self.color[1] = int(value[3:4], 16)
+                self.color[2] = int(value[5:6], 16)
+
+            elif name == 'fill-opacity':
+                self.color[3] = int(255.0*float(value))
+
     def recolor_self_delta(self, delta):
         color = self.color
         x = randint(0,3)
@@ -210,30 +233,8 @@ class Drawing:
         vertices = []
         colors = []
         for p in polygons:
-            pts = p['points'].split(' ')
-
             T = Triangle()
-
-            for i in range(0, len(pts)):
-                x,y = pts[i].split(',')
-                T.points.append([int(x), self.height - int(y)])
-
-            sty = p['style'].replace('; ', ';').split(';')
-
-            for opt in sty:
-                try:
-                    name,value = opt.split(':')
-                except ValueError:
-                    continue
-
-                if name == 'fill':
-                    T.color[0] = int(value[1:2], 16)
-                    T.color[1] = int(value[3:4], 16)
-                    T.color[2] = int(value[5:6], 16)
-
-                elif name == 'fill-opacity':
-                    T.color[3] = int(255.0*float(value))
-
+            T.svg_soup_import(p, self.height)
             self.triangles.append(T)
 
             vertices.extend(T.serialize_points())
