@@ -253,6 +253,32 @@ class Drawing:
 
         self.refresh_batch()
 
+    def svg_export(self, file):
+        """
+        Export the drawing to an SVG file.
+        """
+        f = open(file,"w")
+        f.write('''<?xml version="1.0" standalone="no"?>
+        <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+        "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+
+        <svg width="%dpx" height="%dpx" viewport="0 0 %d %d" version="1.1"
+        xmlns="http://www.w3.org/2000/svg">''' % (self.width,self.height,self.width,self.height))
+        f.write('\n\t<rect width="100%" height="100%" style="fill:#000000;"/>')
+        for t in olddrawing.triangles:
+            f.write('''\n\t<polygon points="%d,%d %d,%d %d,%d" style="fill:#%02x%02x%02x; fill-opacity:%f;"/>''' % (
+                t.points[0][0],
+                self.height - t.points[0][1],
+                t.points[1][0],
+                self.height - t.points[1][1],
+                t.points[2][0],
+                self.height - t.points[2][1],
+                t.color[0],t.color[1],t.color[2],t.color[3]/255.0
+            ))
+
+        f.write("\n</svg>")
+        f.close()
+
 image_pixels = None
 
 def compute_diff(array):
@@ -305,29 +331,7 @@ def main(image_file, num_polygons=250):
 
     @w.event
     def on_close():
-        width,height = olddrawing.width,olddrawing.height
-        f = open(image_file + ".svg","w")
-        f.write('''<?xml version="1.0" standalone="no"?>
-        <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
-        "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-
-        <svg width="%dpx" height="%dpx" viewport="0 0 %d %d" version="1.1"
-        xmlns="http://www.w3.org/2000/svg">''' % (width,height,width,height))
-        f.write('\n\t<rect width="100%" height="100%" style="fill:#000000;"/>')
-        for triangle in olddrawing.triangles:
-            f.write('''\n\t<polygon points="%d,%d %d,%d %d,%d" style="fill:#%02x%02x%02x; fill-opacity:%f;"/>''' % (
-                triangle.points[0][0],
-                height-triangle.points[0][1],
-                triangle.points[1][0],
-                height-triangle.points[1][1],
-                triangle.points[2][0],
-                height-triangle.points[2][1],
-                triangle.color[0],triangle.color[1],triangle.color[2],triangle.color[3]/255.0
-
-            ))
-        f.write("\n</svg>")
-        f.flush()
-        f.close()
+        olddrawing.svg_export(image_file + '.svg')
 
     @w.event
     def on_draw():
