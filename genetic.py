@@ -302,7 +302,6 @@ def main(image_file, num_polygons=250):
 
     #use this for pixel dumps
     a = (gl.GLubyte * (4*size))(0)
-    print len(a)
 
     @w.event
     def on_close():
