@@ -222,11 +222,11 @@ class Drawing:
 
         self.refresh_batch()
 
-    def svg_import(self, file):
+    def svg_import(self, svg_file):
         """
         Import the drawing from an SVG file.
         """
-        xml = open(file).read()
+        xml = open(svg_file).read()
         soup = BeautifulStoneSoup(xml).svg
 
         # Width and Height
@@ -268,11 +268,13 @@ class Drawing:
 
         self.refresh_batch()
 
-    def svg_export(self, file):
+    def svg_export(self, image_file, svg_file):
         """
         Export the drawing to an SVG file.
         """
-        f = open(file,"w")
+
+
+        f = open(svg_file,"w")
         f.write('''<?xml version="1.0" standalone="no"?>
         <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
         "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
@@ -354,7 +356,7 @@ def main(image_file, num_polygons=250, resume=False):
 
     @w.event
     def on_close():
-        olddrawing.svg_export(image_file + '.svg')
+        olddrawing.svg_export(image_file, image_file+'.svg')
 
     @w.event
     def on_draw():
