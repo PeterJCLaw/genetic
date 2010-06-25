@@ -142,29 +142,13 @@ class XTranslationGroup(Group):
 group = None
 
 class Drawing:
-    def __init__(self, width, height, background=[255,255,255]):
+    def __init__(self, width, height, fbo, background=[255,255,255]):
         self.width = width
         self.height = height
         self.triangles = []
         self.batch = Batch()
         self.bg_colour = background
-        has_fbo = gl.gl_info.have_extension('GL_EXT_framebuffer_object')
-
-        #setup a framebuffer
-        self.fb = gl.GLuint()
-        gl.glGenFramebuffersEXT(1, ctypes.byref(self.fb))
-        gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, self.fb)
-
-        #allocate a texture for the fb to render to
-        tex = image.Texture.create_for_size(gl.GL_TEXTURE_2D, width, height, gl.GL_RGBA)
-        gl.glBindTexture(gl.GL_TEXTURE_2D, tex.id)
-        gl.glFramebufferTexture2DEXT(gl.GL_FRAMEBUFFER_EXT, gl.GL_COLOR_ATTACHMENT0_EXT, gl.GL_TEXTURE_2D, tex.id, 0)
-
-        status = gl.glCheckFramebufferStatusEXT(gl.GL_FRAMEBUFFER_EXT)
-        assert status == gl.GL_FRAMEBUFFER_COMPLETE_EXT
-
-        gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, 0)
-
+        self.fb = fbo
         self.bg = self.batch.add( 6,
                         gl.GL_TRIANGLES,None,
                         ("v2i/static", (0,0,0,height,width,height,width,height,width,0,0,0)),
@@ -174,7 +158,7 @@ class Drawing:
 
     def clone(self):
         global group
-        d = Drawing(self.width, self.height, self.bg_colour)
+        d = Drawing(self.width, self.height, self.fb, self.bg_colour)
         bufferlength = len(self.triangles)
         d.vertex_list = d.batch.add(
             bufferlength*3, gl.GL_TRIANGLES, group,
@@ -349,10 +333,6 @@ def update(dt):
 
     #delete stale framebuffers
     fbref = None
-    if olddrawing is not None and olddrawing != newdrawing:
-        fbref = olddrawing.fb
-        gl.glDeleteFramebuffersEXT(1, ctypes.byref(fbref))
-
     olddrawing = newdrawing.clone()
     newdrawing.mutate(5)
 
@@ -371,7 +351,22 @@ def main(image_file, num_polygons=250, resume=False):
     height = pic.height
     size = width*height
 
-    newdrawing = Drawing(width,height)
+    #setup the framebuffer
+    # create our frame buffer
+    fbo = gl.GLuint()
+    gl.glGenFramebuffersEXT(1, ctypes.byref(fbo))
+    gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, fbo)
+
+    # allocate a texture and add to the frame buffer
+    tex = image.Texture.create_for_size(gl.GL_TEXTURE_2D, width, height, gl.GL_RGBA)
+    gl.glBindTexture(gl.GL_TEXTURE_2D, tex.id)
+    gl.glFramebufferTexture2DEXT(gl.GL_FRAMEBUFFER_EXT,
+    gl.GL_COLOR_ATTACHMENT0_EXT, gl.GL_TEXTURE_2D, tex.id, 0)
+
+    status = gl.glCheckFramebufferStatusEXT(gl.GL_FRAMEBUFFER_EXT)
+    assert status == gl.GL_FRAMEBUFFER_COMPLETE_EXT
+
+    newdrawing = Drawing(width,height,fbo)
 
     try:
         os.path.isfile(resume)
@@ -396,6 +391,7 @@ def main(image_file, num_polygons=250, resume=False):
 
     @w.event
     def on_close():
+        gl.glDeleteFramebuffersEXT(1, ctypes.byref(olddrawing.fb))
         olddrawing.svg_export(image_file, svg_file)
 
     @w.event
@@ -448,8 +444,6 @@ def main(image_file, num_polygons=250, resume=False):
             draw_parent(parent, newdrawing.width)
         else:
             # The new drawing sucks. Replace it
-            # dump it's framebuffer first though!!!!
-            gl.glDeleteFramebuffersEXT(1, ctypes.byref(newdrawing.fb))
             newdrawing = olddrawing
         i += 1
 
