@@ -410,6 +410,7 @@ def main(image_file, num_polygons=250, resume=False):
             At the start we've not seen the target before,
             so draw it and store the pixel data.
             """
+            gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, 0)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT)
             pic.blit(0,0)
             blitted = 1
