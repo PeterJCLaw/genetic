@@ -29,8 +29,8 @@ See the `--help` for more details.
 ## Operation
 
 Genetic iterates through a large number of possible images in search of one that
-most closely matches the target. Each candidate image is comprised of a number of
-polygons (currently triangles) of various colours and dimensions.
+most closely matches the target. Each candidate image is comprised of a number
+of polygons (currently triangles) of various colours and dimensions.
 
 On each iteration, a number of mutations are applied to the current best
 candidate image in order to produce a new candidate. The mutations are one of:
