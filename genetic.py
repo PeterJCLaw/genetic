@@ -454,7 +454,12 @@ def main(image_file, num_polygons=DEFAULT_NUM_POLYGONS, resume=False):
 
         if (i % 20 == 0):
             # Use the window title to let the user know how we're doing
-            w.set_caption(str(fps.get_fps())+" "+str(parentdiff) + " " + str(log(parentdiff,10))+ " " + str(i))
+            w.set_caption("%s %s %s %s" % (
+                fps.get_fps(),
+                parentdiff,
+                log(parentdiff,10),
+                i,
+            ))
 
         fps.tick()
 
