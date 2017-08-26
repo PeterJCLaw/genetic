@@ -473,7 +473,9 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="A genetic hill-climber for reproducing images as SVGs",
     )
-    parser.add_argument('image_file')
+    parser.add_argument(
+        'image_file',
+    )
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
