@@ -475,6 +475,7 @@ def parse_args():
     )
     parser.add_argument(
         'image_file',
+        help="The image file to attempt to match.",
     )
 
     group = parser.add_mutually_exclusive_group()
@@ -483,6 +484,9 @@ def parse_args():
         action='store',
         type=int,
         default=DEFAULT_NUM_POLYGONS,
+        help="The number of polygons to use (default: %(default)d). Using "
+             "fewer polygons is faster. Using more polygons usually results in "
+             "a closer match.",
     )
 
     group.add_argument(
@@ -491,6 +495,11 @@ def parse_args():
         metavar='SVG_FILE',
         action='store',
         default=False,
+        help="Whether or not to resume from a previous session. When the "
+             "graphics window is closed, the current state will be saved as an "
+             "SVG file with the same base name as the original image. By "
+             "default, resuming uses that saved SVG file, though other paths "
+             "can also be specified (and will be saved back to).",
     )
 
     args = parser.parse_args()
