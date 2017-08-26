@@ -29,6 +29,7 @@ from time import sleep
 from math import log
 from BeautifulSoup import BeautifulStoneSoup
 
+import argparse
 import pyglet
 import os,sys
 import numpy as np
@@ -341,7 +342,9 @@ blitted = 0
 image_pixels = None
 i = 0
 
-def main(image_file, num_polygons=250, resume=False):
+DEFAULT_NUM_POLYGONS = 250
+
+def main(image_file, num_polygons=DEFAULT_NUM_POLYGONS, resume=False):
     global image_pixels
     global keeps
     global newdrawing, olddrawing
@@ -460,6 +463,37 @@ def main(image_file, num_polygons=250, resume=False):
     # Set it running
     pyglet.app.run()
 
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="A genetic hill-climber for reproducing images as SVGs",
+    )
+    parser.add_argument('image_file')
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        '--polygons',
+        action='store',
+        type=int,
+        default=DEFAULT_NUM_POLYGONS,
+    )
+
+    group.add_argument(
+        '--resume',
+        nargs='?',
+        metavar='SVG_FILE',
+        action='store',
+        default=False,
+    )
+
+    args = parser.parse_args()
+
+    if args.resume is None:
+        args.resume = True
+
+    return args
+
+
 if __name__ == "__main__":
     #import cProfile,pstats
     #prof = cProfile.Profile()
@@ -469,32 +503,6 @@ if __name__ == "__main__":
     #stats.print_stats(800)
     #stats.print_callees()
     #stats.print_callers()
-    polygons = 250
-    resume = False
-    try:
-        if len(sys.argv) > 4:
-            raise Exception('Too many arguments.')
-        elif sys.argv[2][0:11] == '--polygons=':
-            if len(sys.argv) > 3:
-                raise Exception('Too many arguments.')
-            polygons = int(sys.argv[2][11:])
-            print 'Using custom number of polygons (%d).' % polygons
-        elif sys.argv[2][0:8] == '--resume':
-            resume = len(sys.argv[2]) == 8 or sys.argv[2][9:14].lower() != 'false'
-            try:
-                resume = sys.argv[3]
-                print 'Resuming from previous session using %s.' % resume
-            except IndexError:
-                print 'Resuming from previous session using default path.'
-        else:
-            raise Exception('Invalid argument.')
-    except Exception as e:
-        if len(sys.argv) != 2:
-            print e
-            print 'Usage: genetic.py IMAGE_FILE [--polygons=250]'
-            print '   or: genetic.py IMAGE_FILE [--resume=False [SVG_FILE]]'
-            sys.exit(1)
-        else:
-            main(sys.argv[1])
-    else:
-        main(sys.argv[1], num_polygons=polygons, resume=resume)
+
+    args = parse_args()
+    main(args.image_file, args.polygons, args.resume)
