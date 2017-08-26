@@ -13,7 +13,7 @@ It was inspired in part by the JavaScript implementation at http://alteredqualia
 Genetic expects to be passed a single image file to match:
 
 ``` shell
-./genetic.py IMAGE_FILE
+python genetic.py IMAGE_FILE
 ```
 
 When running it will display a window which contains the target image, along
